@@ -14,7 +14,7 @@ namespace Aura::Plugin {
 
 /// @brief VST3 plugin instance.
 class Vst3Plugin : public IAudioPlugin {
-public:
+  public:
     explicit Vst3Plugin(PluginDescriptor descriptor);
 
     [[nodiscard]] const PluginDescriptor& descriptor() const override { return descriptor_; }
@@ -32,7 +32,7 @@ public:
     [[nodiscard]] std::vector<std::uint8_t> saveState() const override { return {}; }
     [[nodiscard]] std::string loadState(const std::uint8_t* data, std::size_t size) override;
 
-private:
+  private:
     PluginDescriptor descriptor_;
     bool prepared_ = false;
 };

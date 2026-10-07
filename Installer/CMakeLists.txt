@@ -1,5 +1,6 @@
-# AURA Installer — Windows NSIS setup via CPack.
-# Produces: AURA-DAW-Setup.exe
+# AURA Installer — experimental Windows NSIS setup via CPack.
+# This is packaging configuration only; clean-machine install and launch tests
+# are still required before a distributable setup can be claimed.
 include(InstallRequiredSystemLibraries)
 
 install(DIRECTORY "${CMAKE_SOURCE_DIR}/Samples/"
@@ -24,16 +25,19 @@ set(CPACK_NSIS_DISPLAY_NAME "AURA Digital Audio Workstation")
 set(CPACK_NSIS_PACKAGE_NAME "AURA DAW ${PROJECT_VERSION}")
 set(CPACK_NSIS_MODIFY_PATH ON)
 set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
-set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/aura.ico")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/aura.ico")
+  set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/aura.ico")
+else()
+  message(STATUS "No custom NSIS icon found; using the NSIS default.")
+endif()
 set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
   WriteRegStr HKCU 'Software\\\\AURA\\\\DAW' 'Version' '${PROJECT_VERSION}'
 ")
 
-# Optional Authenticode signing for release builds:
-#   cmake -DAURA_SIGN_TOOL="signtool sign /fd SHA256 /a" ...
-if(DEFINED AURA_SIGN_TOOL)
-  set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "${CPACK_NSIS_EXTRA_INSTALL_COMMANDS}")
-  message(STATUS "Installer signing enabled: ${AURA_SIGN_TOOL}")
+# Code signing is not implemented. Do not imply that setting this legacy
+# variable signs the application or the generated installer.
+if(DEFINED AURA_SIGN_TOOL AND NOT "${AURA_SIGN_TOOL}" STREQUAL "")
+  message(WARNING "AURA_SIGN_TOOL is not wired to CPack; the package will remain unsigned.")
 endif()
 
 include(CPack)

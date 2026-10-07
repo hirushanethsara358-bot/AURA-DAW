@@ -1,6 +1,8 @@
 /// @file test_engine.cpp
 /// @brief Unit tests for the audio engine and transport.
 
+#include <chrono>
+#include <thread>
 #include <vector>
 
 #include <gtest/gtest.h>
@@ -28,13 +30,12 @@ TEST(Engine, ConfigValidation) {
 TEST(Engine, DriverNames) {
     EXPECT_STREQ(Aura::Audio::toString(Aura::Audio::DriverType::ASIO), "ASIO");
     EXPECT_STREQ(Aura::Audio::toString(Aura::Audio::DriverType::WASAPI), "WASAPI");
-    EXPECT_EQ(Aura::Audio::fileExtension(Aura::Audio::AudioFileFormat::FLAC),
-              std::string("flac"));
+    EXPECT_EQ(Aura::Audio::fileExtension(Aura::Audio::AudioFileFormat::FLAC), std::string("flac"));
 }
 
 namespace {
 class CountingCallback : public Aura::Audio::IAudioCallback {
-public:
+  public:
     void processBlock(const double* const* /*inputs*/, double* const* outputs, int /*numInputs*/,
                       int numOutputs, int numSamples) override {
         ++blocks;
@@ -44,9 +45,77 @@ public:
             }
         }
     }
+    std::string configureDeviceFormat(double sampleRate, int numInputs, int numOutputs) override {
+        preparedSampleRate = sampleRate;
+        preparedInputs = numInputs;
+        preparedOutputs = numOutputs;
+        return {};
+    }
+
     int blocks = 0;
+    double preparedSampleRate = 0.0;
+    int preparedInputs = -1;
+    int preparedOutputs = -1;
+};
+
+class SlowCallback : public Aura::Audio::IAudioCallback {
+  public:
+    void processBlock(const double* const* /*inputs*/, double* const* /*outputs*/,
+                      int /*numInputs*/, int /*numOutputs*/, int /*numSamples*/) override {
+        std::this_thread::sleep_for(std::chrono::milliseconds(2));
+    }
 };
 } // namespace
+
+TEST(Engine, ConfiguresCallbackWithNegotiatedDummyFormat) {
+    Aura::Audio::AudioEngine engine;
+    CountingCallback callback;
+    engine.setCallback(&callback);
+
+    Aura::Audio::AudioDeviceConfig config;
+    config.driver = Aura::Audio::DriverType::Dummy;
+    config.sampleRate = 44100.0;
+    config.numOutputChannels = 1;
+    ASSERT_TRUE(engine.setConfig(config).empty());
+    ASSERT_TRUE(engine.start().empty());
+
+    EXPECT_DOUBLE_EQ(callback.preparedSampleRate, 44100.0);
+    EXPECT_EQ(callback.preparedInputs, 0);
+    EXPECT_EQ(callback.preparedOutputs, 1);
+    EXPECT_DOUBLE_EQ(engine.negotiatedSampleRate(), 44100.0);
+    EXPECT_EQ(engine.negotiatedOutputChannels(), 1);
+    engine.stop();
+}
+
+TEST(Engine, WasapiDriverFactoryIsAvailableOnWindows) {
+#if defined(_WIN32)
+    const auto driver = Aura::Audio::createDriver(Aura::Audio::DriverType::WASAPI);
+    ASSERT_NE(driver, nullptr);
+    EXPECT_EQ(driver->type(), Aura::Audio::DriverType::WASAPI);
+#else
+    GTEST_SKIP() << "WASAPI is only compiled on Windows.";
+#endif
+}
+
+TEST(Engine, UnsupportedHardwareDriversFailExplicitly) {
+#if defined(_WIN32)
+    GTEST_SKIP()
+        << "WASAPI is compiled on Windows; hardware initialization is covered by device tests.";
+#else
+    Aura::Audio::AudioEngine engine;
+    Aura::Audio::AudioDeviceConfig config;
+    config.driver = Aura::Audio::DriverType::WASAPI;
+
+    const std::string error = engine.setConfig(config);
+    EXPECT_NE(error.find("WASAPI backend is not available"), std::string::npos);
+    EXPECT_FALSE(engine.start().empty());
+    EXPECT_FALSE(engine.isRunning());
+
+    const auto devices = engine.enumerateDevices();
+    ASSERT_EQ(devices.size(), 1);
+    EXPECT_EQ(devices.front().driver, Aura::Audio::DriverType::Dummy);
+#endif
+}
 
 TEST(Engine, StartStopAndOfflineRender) {
     Aura::Audio::AudioEngine engine;
@@ -72,6 +141,22 @@ TEST(Engine, StartStopAndOfflineRender) {
 
     const auto devices = engine.enumerateDevices();
     EXPECT_FALSE(devices.empty());
+}
+
+TEST(Engine, CountsCallbacksThatExceedOneBufferPeriod) {
+    Aura::Audio::AudioEngine engine;
+    SlowCallback callback;
+    engine.setCallback(&callback);
+
+    Aura::Audio::AudioDeviceConfig config;
+    config.driver = Aura::Audio::DriverType::Dummy;
+    config.sampleRate = 48000.0;
+    config.bufferSize = 16;
+    ASSERT_TRUE(engine.setConfig(config).empty());
+    EXPECT_EQ(engine.underrunCount(), 0U);
+
+    EXPECT_EQ(engine.renderOffline(1), 1);
+    EXPECT_EQ(engine.underrunCount(), 1U);
 }
 
 TEST(Transport, PlayAdvanceAndSeek) {

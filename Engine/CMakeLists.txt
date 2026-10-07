@@ -23,7 +23,8 @@ target_include_directories(aura_engine
 target_link_libraries(aura_engine PUBLIC nlohmann_json::nlohmann_json)
 
 if(WIN32)
-  target_link_libraries(aura_engine PRIVATE winmm)
+  target_sources(aura_engine PRIVATE AudioEngine/src/WasapiDriver.cpp)
+  target_link_libraries(aura_engine PRIVATE avrt mmdevapi ole32 propsys uuid winmm)
 endif()
 
 set_target_properties(aura_engine PROPERTIES OUTPUT_NAME aura_engine)

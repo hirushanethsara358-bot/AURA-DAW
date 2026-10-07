@@ -8,6 +8,7 @@
 /// linear-interpolated resampling. Real-time safe after prepare().
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -39,9 +40,27 @@ struct SampleLoadResult {
     std::string error;
 };
 
+/// @brief WAV header details needed by the arrangement without decoding PCM data.
+struct WavMetadata {
+    std::uint16_t channels = 0;
+    std::uint32_t sampleRate = 0;
+    std::uint16_t bitsPerSample = 0;
+    std::uint16_t audioFormat = 0;
+    std::uint64_t frames = 0;
+    std::uint64_t dataOffset = 0;
+    std::uint64_t dataBytes = 0;
+    double durationSeconds = 0.0;
+};
+
+struct WavMetadataResult {
+    bool ok = false;
+    WavMetadata metadata;
+    std::string error;
+};
+
 /// @brief Polyphonic key-mapped sampler.
 class Sampler {
-public:
+  public:
     static constexpr int kMaxVoices = 64;
 
     void setMasterGainDb(double db) { masterGainDb_ = db; }
@@ -65,7 +84,7 @@ public:
     /// @brief Renders voices (adds into the buffers).
     void renderBlock(double* left, double* right, int numSamples);
 
-private:
+  private:
     struct Voice {
         bool active = false;
         const SampleData* sample = nullptr;
@@ -86,7 +105,17 @@ private:
     double masterGainDb_ = 0.0;
 };
 
-/// @brief Parses a WAV file into SampleData. ok=false with error on failure.
-[[nodiscard]] SampleLoadResult parseWavFile(const std::string& path, SampleData& out);
+/// @brief Reads/validates the supported WAV header without allocating for the audio payload.
+[[nodiscard]] WavMetadataResult inspectWavFile(const std::string& path);
+
+/// @brief Default decoded-memory cap for one WAV file (interleaved source bytes excluded).
+inline constexpr std::uint64_t kDefaultMaxDecodedWavBytes = 512ULL * 1024ULL * 1024ULL;
+
+/// @brief Decodes a WAV file into SampleData using bounded temporary storage.
+/// @param maxDecodedBytes Maximum PCM memory to allocate for the decoded channels.
+///        Large files that exceed the limit fail explicitly; callers should stream them later.
+[[nodiscard]] SampleLoadResult
+parseWavFile(const std::string& path, SampleData& out,
+             std::uint64_t maxDecodedBytes = kDefaultMaxDecodedWavBytes);
 
 } // namespace Aura::Instrument

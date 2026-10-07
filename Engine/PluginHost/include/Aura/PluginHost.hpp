@@ -20,12 +20,7 @@
 namespace Aura::Plugin {
 
 /// @brief Supported plugin formats.
-enum class PluginFormat {
-    VST3,
-    AudioUnit,
-    AuraNative,
-    Unknown
-};
+enum class PluginFormat { VST3, AudioUnit, AuraNative, Unknown };
 
 [[nodiscard]] const char* toString(PluginFormat format);
 
@@ -45,7 +40,7 @@ struct PluginDescriptor {
 
 /// @brief Host-side audio plugin interface (real-time safe after prepare).
 class IAudioPlugin {
-public:
+  public:
     virtual ~IAudioPlugin() = default;
 
     [[nodiscard]] virtual const PluginDescriptor& descriptor() const = 0;
@@ -69,7 +64,7 @@ public:
 
 /// @brief Scans folders for plugin bundles (safe: never loads code while scanning).
 class PluginScanner {
-public:
+  public:
     void addSearchPath(std::string path);
     void clearSearchPaths();
     void setRecursive(bool recursive) { recursive_ = recursive; }
@@ -80,7 +75,7 @@ public:
     /// @brief Default Steinberg / system plugin locations for this OS.
     [[nodiscard]] static std::vector<std::string> defaultSearchPaths();
 
-private:
+  private:
     [[nodiscard]] static PluginFormat formatForPath(const std::string& path);
 
     std::vector<std::string> searchPaths_;
@@ -89,7 +84,7 @@ private:
 
 /// @brief Owns plugin lifecycle: instantiation, enable/disable, presets.
 class PluginManager {
-public:
+  public:
     /// @brief Registers descriptors (typically from PluginScanner::scan).
     void registerPlugins(const std::vector<PluginDescriptor>& descriptors);
     [[nodiscard]] std::vector<PluginDescriptor> listPlugins() const;
@@ -113,7 +108,7 @@ public:
                                   std::vector<std::uint8_t>& stateOut) const;
     void deletePreset(const std::string& pluginId, const std::string& presetName);
 
-private:
+  private:
     mutable std::mutex mutex_;
     std::map<std::string, PluginDescriptor> plugins_;
     std::map<std::string, std::map<std::string, std::vector<std::uint8_t>>> presets_;

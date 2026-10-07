@@ -88,8 +88,8 @@ std::vector<PluginDescriptor> PluginScanner::scan() {
                 handle(*it);
             }
         } else {
-            for (auto it = fs::directory_iterator(root, ec);
-                 it != fs::directory_iterator() && !ec; it.increment(ec)) {
+            for (auto it = fs::directory_iterator(root, ec); it != fs::directory_iterator() && !ec;
+                 it.increment(ec)) {
                 handle(*it);
             }
         }

@@ -9,7 +9,7 @@ project(
 
 # ---------------------------------------------------------------- options
 option(AURA_ENABLE_QT6 "Build Qt6/QML user interface" OFF)
-option(AURA_ENABLE_JUCE "Build JUCE audio backend" OFF)
+option(AURA_ENABLE_JUCE "Enable the experimental JUCE dependency (audio adapter is not implemented)" OFF)
 option(AURA_BUILD_TESTS "Build unit tests" ON)
 option(AURA_BUILD_INSTALLER "Build Windows installer target" OFF)
 option(AURA_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" ON)
@@ -61,13 +61,24 @@ if(AURA_BUILD_TESTS)
 endif()
 
 if(AURA_ENABLE_QT6)
-  find_package(Qt6 6.5 REQUIRED COMPONENTS Quick QuickControls2 Concurrent)
+  find_package(Qt6 6.5 REQUIRED COMPONENTS Quick QuickControls2 QuickDialogs2 Concurrent)
   qt_standard_project_setup()
+  if(QT_KNOWN_POLICY_QTP0001)
+    qt_policy(SET QTP0001 NEW)
+  endif()
+  if(QT_KNOWN_POLICY_QTP0004)
+    qt_policy(SET QTP0004 NEW)
+  endif()
 endif()
 
 if(AURA_ENABLE_JUCE)
-  # JUCE is consumed as a submodule or FetchContent in full builds.
-  # See docs/BUILD.md for setup instructions.
+  # JUCE is an optional dependency for the experimental Windows integration.
+  # The current audio engine does not yet contain a JUCE device adapter.
+  if(NOT EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/third_party/JUCE/CMakeLists.txt")
+    message(FATAL_ERROR
+      "AURA_ENABLE_JUCE=ON requires third_party/JUCE/CMakeLists.txt. "
+      "The repository does not currently include the JUCE submodule; see docs/BUILD.md.")
+  endif()
   add_subdirectory(third_party/JUCE EXCLUDE_FROM_ALL)
 endif()
 
@@ -77,6 +88,7 @@ add_subdirectory(Plugins)
 add_subdirectory(AI)
 add_subdirectory(Instruments)
 add_subdirectory(Project)
+add_subdirectory(Session)
 
 if(AURA_ENABLE_QT6)
   add_subdirectory(UI)
@@ -94,7 +106,7 @@ endif()
 message(STATUS "")
 message(STATUS "AURA DAW ${PROJECT_VERSION} configuration:")
 message(STATUS "  Qt6 UI ............ ${AURA_ENABLE_QT6}")
-message(STATUS "  JUCE backend ...... ${AURA_ENABLE_JUCE}")
+message(STATUS "  JUCE dependency ... ${AURA_ENABLE_JUCE}")
 message(STATUS "  Tests ............. ${AURA_BUILD_TESTS}")
 message(STATUS "  Installer ......... ${AURA_BUILD_INSTALLER}")
 message(STATUS "")

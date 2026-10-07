@@ -16,13 +16,7 @@
 namespace Aura::Instrument {
 
 /// @brief Oscillator waveform.
-enum class OscillatorType {
-    Sine,
-    Saw,
-    Square,
-    Triangle,
-    Noise
-};
+enum class OscillatorType { Sine, Saw, Square, Triangle, Noise };
 
 /// @brief ADSR envelope stages in seconds (sustain = level 0..1).
 struct AdsrParams {
@@ -34,7 +28,7 @@ struct AdsrParams {
 
 /// @brief Sample-accurate ADSR envelope generator.
 class Adsr {
-public:
+  public:
     void setParams(const AdsrParams& params);
     void setSampleRate(double sampleRate);
     void noteOn();
@@ -43,7 +37,7 @@ public:
     double next();
     void reset();
 
-private:
+  private:
     enum class Stage { Idle, Attack, Decay, Sustain, Release };
 
     AdsrParams params_;
@@ -54,14 +48,14 @@ private:
 
 /// @brief Single oscillator with phase-continuous waveforms.
 class Oscillator {
-public:
+  public:
     void setType(OscillatorType type) { type_ = type; }
     void setFrequency(double freqHz) { frequency_ = freqHz > 0.0 ? freqHz : 440.0; }
     void setSampleRate(double sampleRate) { sampleRate_ = sampleRate; }
     void reset();
     double next();
 
-private:
+  private:
     OscillatorType type_ = OscillatorType::Saw;
     double frequency_ = 440.0;
     double sampleRate_ = 48000.0;
@@ -82,7 +76,7 @@ struct SynthParams {
 
 /// @brief Polyphonic subtractive synthesizer with voice stealing.
 class Synth {
-public:
+  public:
     static constexpr int kDefaultVoices = 8;
     static constexpr int kMaxVoices = 32;
 
@@ -100,7 +94,7 @@ public:
     /// @brief Renders stereo output (adds into the buffers).
     void renderBlock(double* left, double* right, int numSamples);
 
-private:
+  private:
     struct Voice {
         Oscillator osc;
         Adsr adsr;

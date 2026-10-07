@@ -17,8 +17,8 @@
     },
     {
       "name": "windows-full",
-      "displayName": "Windows full build",
-      "description": "Complete Windows build with Qt6 UI, JUCE backend and installer.",
+      "displayName": "Windows integration scaffold (experimental)",
+      "description": "Incomplete Qt/JUCE/installer integration; not a validated release build.",
       "generator": "Visual Studio 17 2022",
       "architecture": "x64",
       "binaryDir": "${sourceDir}/build/windows-full",

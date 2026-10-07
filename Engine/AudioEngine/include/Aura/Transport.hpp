@@ -3,6 +3,7 @@
 /// @file Transport.hpp
 /// @brief Transport state, tempo map and sample-accurate musical position.
 
+#include <atomic>
 #include <cstdint>
 #include <mutex>
 #include <vector>
@@ -10,11 +11,12 @@
 namespace Aura::Transport {
 
 /// @brief Playback state of the transport.
-enum class TransportState {
-    Stopped,
-    Playing,
-    Recording
-};
+enum class TransportState { Stopped, Playing, Recording };
+
+static_assert(std::atomic<std::int64_t>::is_always_lock_free,
+              "Audio-thread transport position requires lock-free 64-bit atomics.");
+static_assert(std::atomic<TransportState>::is_always_lock_free,
+              "Audio-thread transport state requires lock-free enum atomics.");
 
 /// @brief A tempo change at a given bar position.
 struct TempoMarker {
@@ -31,7 +33,7 @@ struct TimeSignatureMarker {
 
 /// @brief Sample-accurate position with musical conversions.
 class Transport {
-public:
+  public:
     explicit Transport(double sampleRate = 48000.0);
 
     void setSampleRate(double sampleRate);
@@ -44,6 +46,12 @@ public:
 
     /// @brief Advances the position by a rendered block (called by the engine).
     void advance(std::int64_t numSamples);
+
+    /// @brief Publish callback-owned position/state without taking the control mutex.
+    /// Use instead of advance() for a stream whose renderer already owns exact position; do not
+    /// publish and advance concurrently for the same stream.
+    void publishAudioThreadPositionSamples(std::int64_t samples) noexcept;
+    void publishAudioThreadState(TransportState state) noexcept;
 
     /// @brief Jumps to an absolute sample position.
     void seekSamples(std::int64_t samples);
@@ -67,13 +75,13 @@ public:
     void setMetronome(bool enabled);
     [[nodiscard]] bool metronome() const;
 
-private:
+  private:
     [[nodiscard]] double secondsPerBeat() const;
 
     mutable std::mutex mutex_;
     double sampleRate_;
-    TransportState state_ = TransportState::Stopped;
-    std::int64_t positionSamples_ = 0;
+    std::atomic<TransportState> state_{TransportState::Stopped};
+    std::atomic<std::int64_t> positionSamples_{0};
     double tempo_ = 120.0;
     std::vector<TempoMarker> tempoMap_{{}};
     int timeSigNum_ = 4;

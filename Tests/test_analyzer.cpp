@@ -81,8 +81,7 @@ TEST(Analyzer, StereoMixesToMono) {
     Aura::Ai::MusicAnalyzer analyzer;
     const auto left = makeAMajorTriad(2.0);
     const auto right = makeAMajorTriad(2.0);
-    const auto result =
-        analyzer.analyzeStereo(left.data(), right.data(), left.size(), kTestRate);
+    const auto result = analyzer.analyzeStereo(left.data(), right.data(), left.size(), kTestRate);
     EXPECT_EQ(result.key, "A major");
 }
 

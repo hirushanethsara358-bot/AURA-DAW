@@ -2,6 +2,8 @@
 add_library(aura_instruments STATIC
   AuraSynth/src/Synth.cpp
   AuraSampler/src/Sampler.cpp
+  AuraSampler/src/AudioBufferManager.cpp
+  AuraSampler/src/WavClipPlayer.cpp
 )
 
 add_library(AURA::Instruments ALIAS aura_instruments)

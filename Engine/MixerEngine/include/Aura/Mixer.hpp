@@ -20,7 +20,7 @@ namespace Aura::Mixer {
 
 /// @brief Insert-effect interface hosted on strips, buses and master.
 class IInsertProcessor {
-public:
+  public:
     virtual ~IInsertProcessor() = default;
     virtual void prepare(double sampleRate, int maxBlockSize) = 0;
     virtual void process(double* const* channels, int numChannels, int numSamples) = 0;
@@ -36,7 +36,7 @@ struct Send {
 
 /// @brief A single mixer channel strip (audio / instrument / bus return).
 class ChannelStrip {
-public:
+  public:
     explicit ChannelStrip(std::string name = "Channel");
 
     [[nodiscard]] const std::string& name() const { return name_; }
@@ -66,11 +66,10 @@ public:
 
     // Internal processing entry used by Mixer (locks avoided on audio path
     // by snapshotting parameters under mutex before the block loop).
-    void processStrip(const double* const* inputs, double* const* busBuffers,
-                      std::size_t numBuses, double* mixLeft, double* mixRight, int numSamples,
-                      bool audible);
+    void processStrip(const double* const* inputs, double* const* busBuffers, std::size_t numBuses,
+                      double* mixLeft, double* mixRight, int numSamples, bool audible);
 
-private:
+  private:
     std::string name_;
     mutable std::mutex mutex_;
     double volumeDb_ = 0.0;
@@ -86,7 +85,7 @@ private:
 
 /// @brief The mixer: owns strips, buses and the master chain.
 class Mixer {
-public:
+  public:
     Mixer();
 
     void prepare(double sampleRate, int maxBlockSize, int numOutputs = 2);
@@ -111,11 +110,9 @@ public:
     void processBlock(const double* const* const* stripInputs, double* const* outputs,
                       int numOutputs, int numSamples);
 
-    [[nodiscard]] double masterPeak() const {
-        return masterPeak_.load(std::memory_order_relaxed);
-    }
+    [[nodiscard]] double masterPeak() const { return masterPeak_.load(std::memory_order_relaxed); }
 
-private:
+  private:
     mutable std::mutex mutex_;
     double sampleRate_ = 48000.0;
     int maxBlockSize_ = 512;

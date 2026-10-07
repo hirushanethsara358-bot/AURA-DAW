@@ -138,8 +138,7 @@ double MusicAnalyzer::detectBpm(const std::vector<double>& envelope, double enve
         return 0.0; // need at least ~2 seconds
     }
     // Remove DC.
-    const double mean =
-        std::accumulate(envelope.begin(), envelope.end(), 0.0) / envelope.size();
+    const double mean = std::accumulate(envelope.begin(), envelope.end(), 0.0) / envelope.size();
     std::vector<double> centered(envelope.size());
     for (std::size_t i = 0; i < envelope.size(); ++i) {
         centered[i] = envelope[i] - mean;
@@ -182,7 +181,7 @@ std::string MusicAnalyzer::detectKey(const std::array<double, 12>& chroma,
                                                      2.52, 5.19, 2.39, 3.66, 2.29, 2.88};
     static constexpr std::array<double, 12> minor = {6.33, 2.68, 3.52, 5.38, 2.60, 3.53,
                                                      2.54, 4.75, 3.98, 2.69, 3.34, 3.17};
-    static constexpr std::array<const char*, 12> names = {"C",  "C#", "D",  "D#", "E", "F",
+    static constexpr std::array<const char*, 12> names = {"C",  "C#", "D",  "D#", "E",  "F",
                                                           "F#", "G",  "G#", "A",  "A#", "B"};
 
     const double chromaMean = std::accumulate(chroma.begin(), chroma.end(), 0.0) / 12.0;
@@ -193,13 +192,11 @@ std::string MusicAnalyzer::detectKey(const std::array<double, 12>& chroma,
     for (int root = 0; root < 12; ++root) {
         for (int mode = 0; mode < 2; ++mode) {
             const auto& profile = (mode == 0) ? major : minor;
-            const double profMean =
-                std::accumulate(profile.begin(), profile.end(), 0.0) / 12.0;
+            const double profMean = std::accumulate(profile.begin(), profile.end(), 0.0) / 12.0;
             double num = 0.0, denA = 0.0, denB = 0.0;
             for (int i = 0; i < 12; ++i) {
                 const double a = chroma[static_cast<std::size_t>(i)] - chromaMean;
-                const double b =
-                    profile[static_cast<std::size_t>((i - root + 12) % 12)] - profMean;
+                const double b = profile[static_cast<std::size_t>((i - root + 12) % 12)] - profMean;
                 num += a * b;
                 denA += a * a;
                 denB += b * b;

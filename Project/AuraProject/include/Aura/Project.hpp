@@ -20,12 +20,7 @@ namespace Aura::Project {
 constexpr std::chrono::minutes kAutosaveInterval{5};
 
 /// @brief Track type discriminator.
-enum class TrackType {
-    Audio,
-    Midi,
-    Instrument,
-    Bus
-};
+enum class TrackType { Audio, Midi, Instrument, Bus };
 
 [[nodiscard]] const char* toString(TrackType type);
 [[nodiscard]] TrackType trackTypeFromString(const std::string& text);
@@ -44,7 +39,7 @@ struct ClipState {
     std::string name;
     double startBar = 0.0;
     double lengthBars = 1.0;
-    std::string sourcePath; ///< Audio file for audio clips (empty = MIDI).
+    std::string sourcePath;        ///< Audio file for audio clips (empty = MIDI).
     std::vector<StoredNote> notes; ///< MIDI payload for MIDI clips.
 };
 
@@ -68,7 +63,7 @@ struct TrackState {
 
 /// @brief Complete serializable project.
 class Project {
-public:
+  public:
     Project();
 
     void createNew(std::string name);
@@ -83,6 +78,10 @@ public:
     [[nodiscard]] const std::vector<TrackState>& tracks() const { return tracks_; }
     /// @brief Adds a track and returns its id.
     std::string addTrack(std::string name, TrackType type);
+    /// @brief Adds a validated clip to a track. Returns false and sets error on failure.
+    bool addClip(const std::string& trackId, ClipState clip, std::string& error);
+    /// @brief Updates a track's validated mixer state.
+    bool setTrackMixerState(const std::string& trackId, const TrackMixerState& state);
     bool removeTrack(const std::string& id);
     [[nodiscard]] TrackState* findTrack(const std::string& id);
     [[nodiscard]] const TrackState* findTrack(const std::string& id) const;
@@ -104,7 +103,7 @@ public:
     [[nodiscard]] std::string autosave(const std::string& backupDirectory);
     void setLastAutosaveNow();
 
-private:
+  private:
     std::string serialize() const;
     [[nodiscard]] std::string deserialize(const std::string& json);
 
@@ -116,6 +115,7 @@ private:
     bool dirty_ = false;
     std::chrono::steady_clock::time_point lastAutosave_ = std::chrono::steady_clock::now();
     std::uint64_t nextId_ = 1;
+    std::uint64_t nextClipId_ = 1;
 };
 
 } // namespace Aura::Project

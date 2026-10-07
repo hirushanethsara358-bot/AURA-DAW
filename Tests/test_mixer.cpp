@@ -27,7 +27,8 @@ struct StripInputSet {
         top.resize(static_cast<std::size_t>(numStrips));
         for (int s = 0; s < numStrips; ++s) {
             ptrs[static_cast<std::size_t>(s)] = {storage[static_cast<std::size_t>(s)].data(),
-                                                 storage[static_cast<std::size_t>(s)].data() + kBlock};
+                                                 storage[static_cast<std::size_t>(s)].data() +
+                                                     kBlock};
             top[static_cast<std::size_t>(s)] = ptrs[static_cast<std::size_t>(s)].data();
         }
     }

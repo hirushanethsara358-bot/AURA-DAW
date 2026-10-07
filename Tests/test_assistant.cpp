@@ -25,7 +25,7 @@ TEST(Assistant, TheoryParsesKeys) {
 TEST(Assistant, ChordSuggestionsAreDiatonic) {
     Aura::Ai::ChordSuggester suggester;
     const auto chords = suggester.suggest("A minor", 8);
-    ASSERT_EQ(chords.size(), 7); // seven diatonic triads
+    ASSERT_EQ(chords.size(), 7);     // seven diatonic triads
     EXPECT_EQ(chords[0].name, "Am"); // tonic first
     EXPECT_EQ(chords[0].function, "i");
     for (const auto& chord : chords) {

@@ -18,7 +18,7 @@ namespace Aura::Ai {
 
 /// @brief Music theory helpers: scales, keys, chord spellings.
 class MusicTheory {
-public:
+  public:
     /// @brief Semitone offsets for the natural major / minor scale.
     [[nodiscard]] static std::vector<int> scaleIntervals(bool minor);
     /// @brief Pitch-class names C..B.
@@ -38,14 +38,14 @@ public:
 
 /// @brief A suggested chord in root position.
 struct Chord {
-    std::string name;            ///< e.g. "Am", "F", "G".
-    std::vector<int> midiNotes;  ///< MIDI pitches (octave 3-4).
-    std::string function;        ///< e.g. "i", "VI", "VII".
+    std::string name;           ///< e.g. "Am", "F", "G".
+    std::vector<int> midiNotes; ///< MIDI pitches (octave 3-4).
+    std::string function;       ///< e.g. "i", "VI", "VII".
 };
 
 /// @brief Suggests diatonic chords and progressions for a key.
 class ChordSuggester {
-public:
+  public:
     /// @brief Returns up to maxCount diatonic triads ordered by commonness.
     [[nodiscard]] std::vector<Chord> suggest(const std::string& key, int maxCount = 8) const;
     /// @brief Returns a full 4-chord progression (e.g. i–VI–III–VII in minor).
@@ -64,7 +64,7 @@ struct MelodyNote {
 
 /// @brief Generates melodies by random-walk over the key scale (seeded).
 class MelodyGenerator {
-public:
+  public:
     /// @param key   Musical key, e.g. "A minor".
     /// @param bars  Number of bars to generate (4/4).
     /// @param seed  RNG seed for reproducible output.
@@ -82,7 +82,7 @@ struct MixAdvice {
 
 /// @brief Rule-based mix advisor driven by level analysis.
 class MixAdvisor {
-public:
+  public:
     /// @param peakDb Peak level in dBFS, @param rmsDb RMS level in dBFS.
     [[nodiscard]] std::vector<MixAdvice> advise(double peakDb, double rmsDb) const;
 };
@@ -102,9 +102,9 @@ struct MasterChainSuggestion {
 
 /// @brief Mastering assistant: maps analysis to a starting chain.
 class MasteringAssistant {
-public:
-    [[nodiscard]] MasterChainSuggestion suggest(double peakDb, double rmsDb,
-                                                const std::string& targetPlatform = "streaming") const;
+  public:
+    [[nodiscard]] MasterChainSuggestion
+    suggest(double peakDb, double rmsDb, const std::string& targetPlatform = "streaming") const;
 };
 
 } // namespace Aura::Ai

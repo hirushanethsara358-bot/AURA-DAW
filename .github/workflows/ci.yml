@@ -48,6 +48,6 @@ jobs:
 
       - name: Check formatting
         run: |
-          find Engine AI Instruments Project Tests UI \
-            -name '*.hpp' -o -name '*.cpp' | \
-            xargs clang-format-18 --dry-run --Werror
+          find Engine AI Instruments Project Session Tests UI Plugins \
+            \( -name '*.hpp' -o -name '*.cpp' \) -print0 | \
+            xargs -0 clang-format-18 --dry-run --Werror

@@ -16,22 +16,16 @@ namespace Aura::Midi {
 
 /// @brief A single timestamped MIDI event (time in beats).
 struct Message {
-    enum class Type {
-        NoteOn,
-        NoteOff,
-        ControlChange,
-        PitchBend,
-        ProgramChange
-    };
+    enum class Type { NoteOn, NoteOff, ControlChange, PitchBend, ProgramChange };
 
     Type type = Type::NoteOn;
-    int channel = 0;     ///< 0..15
-    int note = 60;       ///< 0..127
-    int velocity = 100;  ///< 0..127
-    int cc = 0;          ///< controller number for ControlChange
-    int ccValue = 0;     ///< controller value
-    int pitchBend = 0;   ///< -8192..8191
-    double beat = 0.0;   ///< position in beats
+    int channel = 0;          ///< 0..15
+    int note = 60;            ///< 0..127
+    int velocity = 100;       ///< 0..127
+    int cc = 0;               ///< controller number for ControlChange
+    int ccValue = 0;          ///< controller value
+    int pitchBend = 0;        ///< -8192..8191
+    double beat = 0.0;        ///< position in beats
     double lengthBeats = 1.0; ///< note duration (for paired note events)
 
     static Message noteOn(int note, int velocity, double beat, double lengthBeats = 1.0,
@@ -41,7 +35,7 @@ struct Message {
 
 /// @brief A MIDI clip: an ordered collection of messages with editing ops.
 class Clip {
-public:
+  public:
     explicit Clip(double lengthBeats = 4.0);
 
     void addMessage(const Message& msg);
@@ -66,7 +60,7 @@ public:
     /// @brief Scales all velocities by a factor (clamped to 1..127).
     void scaleVelocity(double factor);
 
-private:
+  private:
     void sortByBeat();
 
     std::vector<Message> messages_;

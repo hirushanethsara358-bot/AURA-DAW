@@ -258,8 +258,7 @@ void Mixer::processBlock(const double* const* const* stripInputs, double* const*
     }
 
     for (std::size_t s = 0; s < strips_.size(); ++s) {
-        const bool audible =
-            anySolo ? strips_[s]->isSolo() : !strips_[s]->isMuted();
+        const bool audible = anySolo ? strips_[s]->isSolo() : !strips_[s]->isMuted();
         strips_[s]->processStrip(stripInputs[s], busPtrs.data(), numBuses_, mixLeft_.data(),
                                  mixRight_.data(), numSamples, audible);
     }

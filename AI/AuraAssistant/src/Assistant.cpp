@@ -66,7 +66,7 @@ std::vector<int> MusicTheory::scaleNotes(int root, bool minor, int lowOctave, in
 
 namespace {
 struct DegreeChord {
-    int degree; // 0-based scale degree of the chord root.
+    int degree;              // 0-based scale degree of the chord root.
     const char* suffixMajor; // "", "m", "dim" in major keys.
     const char* suffixMinor; // "", "m", "dim" in (natural) minor keys.
     const char* functionMajor;
@@ -107,8 +107,7 @@ std::vector<Chord> ChordSuggester::suggest(const std::string& key, int maxCount)
         const int base = 48 + chordRootPc; // C3 + root
         const bool isMinor = suffix == "m";
         const bool isDim = suffix == "dim";
-        chord.midiNotes = {base, base + (isMinor || isDim ? 3 : 4),
-                           base + (isDim ? 6 : 7)};
+        chord.midiNotes = {base, base + (isMinor || isDim ? 3 : 4), base + (isDim ? 6 : 7)};
         chords.push_back(chord);
     }
     std::sort(chords.begin(), chords.end(), [&](const Chord& a, const Chord& b) {
@@ -231,8 +230,7 @@ std::vector<MixAdvice> MixAdvisor::advise(double peakDb, double rmsDb) const {
                                        "Ease off the master limiter."});
     }
     if (rmsDb < -30.0) {
-        out.push_back({"Headroom", "Average loudness is very low (RMS " +
-                                       std::to_string(rmsDb) +
+        out.push_back({"Headroom", "Average loudness is very low (RMS " + std::to_string(rmsDb) +
                                        " dBFS). Check for muted buses or "
                                        "excessively low faders."});
     }
@@ -245,8 +243,8 @@ std::vector<MixAdvice> MixAdvisor::advise(double peakDb, double rmsDb) const {
 
 // -------------------------------------------------------------- Mastering
 
-MasterChainSuggestion
-MasteringAssistant::suggest(double peakDb, double rmsDb, const std::string& targetPlatform) const {
+MasterChainSuggestion MasteringAssistant::suggest(double peakDb, double rmsDb,
+                                                  const std::string& targetPlatform) const {
     MasterChainSuggestion chain;
     const double crest = peakDb - rmsDb;
 

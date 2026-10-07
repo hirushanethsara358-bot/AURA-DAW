@@ -31,7 +31,7 @@ struct Parameter {
 
 /// @brief RBJ cookbook biquad filter (mono state per channel).
 class Biquad {
-public:
+  public:
     enum class Type { LowPass, HighPass, Peaking, LowShelf, HighShelf, Notch };
 
     void setType(Type type);
@@ -44,7 +44,7 @@ public:
     double processSample(double x, int channel);
     void processBlock(double* const* channels, int numChannels, int numSamples);
 
-private:
+  private:
     void updateCoefficients();
 
     Type type_ = Type::Peaking;
@@ -66,7 +66,7 @@ private:
 
 /// @brief 6-band parametric EQ: HPF + LPF + 4 peaking bands.
 class ParametricEQ {
-public:
+  public:
     static constexpr int kNumBands = 6;
 
     void prepare(double sampleRate, int numChannels);
@@ -75,7 +75,7 @@ public:
     [[nodiscard]] const Biquad& band(int index) const;
     void processBlock(double* const* channels, int numChannels, int numSamples);
 
-private:
+  private:
     std::array<Biquad, kNumBands> bands_;
 };
 
@@ -83,7 +83,7 @@ private:
 
 /// @brief Feed-forward peak compressor with soft knee.
 class Compressor {
-public:
+  public:
     void setThresholdDb(double v) { thresholdDb_ = v; }
     void setRatio(double v) { ratio_ = v < 1.0 ? 1.0 : v; }
     void setAttackMs(double v) { attackMs_ = v; }
@@ -97,7 +97,7 @@ public:
     /// @brief Current gain reduction in dB (positive number).
     [[nodiscard]] double gainReductionDb() const { return gainReductionDb_; }
 
-private:
+  private:
     double thresholdDb_ = -18.0;
     double ratio_ = 4.0;
     double attackMs_ = 10.0;
@@ -113,14 +113,14 @@ private:
 
 /// @brief Brick-wall limiter (fast attack, high ratio, output ceiling).
 class Limiter {
-public:
+  public:
     void setCeilingDb(double v) { ceilingDb_ = v; }
     void setReleaseMs(double v) { releaseMs_ = v; }
     void prepare(double sampleRate, int numChannels);
     void reset();
     void processBlock(double* const* channels, int numChannels, int numSamples);
 
-private:
+  private:
     double ceilingDb_ = -0.5;
     double releaseMs_ = 80.0;
     double sampleRate_ = 48000.0;
@@ -131,7 +131,7 @@ private:
 
 /// @brief Downward-expansion noise gate.
 class Gate {
-public:
+  public:
     void setThresholdDb(double v) { thresholdDb_ = v; }
     void setRangeDb(double v) { rangeDb_ = v; }
     void setAttackMs(double v) { attackMs_ = v; }
@@ -140,7 +140,7 @@ public:
     void reset();
     void processBlock(double* const* channels, int numChannels, int numSamples);
 
-private:
+  private:
     double thresholdDb_ = -48.0;
     double rangeDb_ = 80.0;
     double attackMs_ = 1.0;
@@ -154,7 +154,7 @@ private:
 
 /// @brief Stereo tempo-syncable delay line with feedback and damping.
 class Delay {
-public:
+  public:
     void setDelayMs(double v) { delayMs_ = v; }
     void setFeedback(double v);
     void setMix(double v);
@@ -162,7 +162,7 @@ public:
     void reset();
     void processBlock(double* const* channels, int numChannels, int numSamples);
 
-private:
+  private:
     double delayMs_ = 250.0;
     double feedback_ = 0.35;
     double mix_ = 0.25;
@@ -175,7 +175,7 @@ private:
 
 /// @brief Schroeder-style algorithmic reverb (4 combs + 2 all-passes).
 class Reverb {
-public:
+  public:
     void setRoomSize(double v); ///< 0..1
     void setDamping(double v);  ///< 0..1
     void setMix(double v);      ///< 0..1
@@ -183,7 +183,7 @@ public:
     void reset();
     void processBlock(double* const* channels, int numChannels, int numSamples);
 
-private:
+  private:
     struct Comb {
         std::vector<double> buffer;
         std::size_t pos = 0;
@@ -206,7 +206,7 @@ private:
 
 /// @brief Shared LFO-modulated delay core for chorus and flanger.
 class ModulatedDelay {
-public:
+  public:
     void setBaseDelayMs(double v) { baseMs_ = v; }
     void setDepthMs(double v) { depthMs_ = v; }
     void setRateHz(double v) { rateHz_ = v; }
@@ -216,7 +216,7 @@ public:
     void reset();
     void processBlock(double* const* channels, int numChannels, int numSamples);
 
-private:
+  private:
     double baseMs_ = 20.0;
     double depthMs_ = 5.0;
     double rateHz_ = 0.8;
@@ -230,13 +230,13 @@ private:
 
 /// @brief Chorus: slow, deep modulated delay, no feedback.
 class Chorus : public ModulatedDelay {
-public:
+  public:
     Chorus();
 };
 
 /// @brief Flanger: short modulated delay with high feedback.
 class Flanger : public ModulatedDelay {
-public:
+  public:
     Flanger();
 };
 
@@ -244,7 +244,7 @@ public:
 
 /// @brief Soft-clipping distortion with tone control.
 class Distortion {
-public:
+  public:
     void setDrive(double v); ///< 1..100
     void setTone(double v);  ///< 0..1 (low-pass brightness)
     void setMix(double v);   ///< 0..1
@@ -252,7 +252,7 @@ public:
     void reset();
     void processBlock(double* const* channels, int numChannels, int numSamples);
 
-private:
+  private:
     double drive_ = 10.0;
     double tone_ = 0.7;
     double mix_ = 0.8;

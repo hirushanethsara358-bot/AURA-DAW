@@ -11,9 +11,9 @@ namespace Aura::Audio {
 
 /// @brief Supported low-level audio driver backends.
 enum class DriverType {
-    WASAPI,    ///< Windows Audio Session API (default on Windows).
-    ASIO,      ///< Steinberg ASIO (pro interfaces, lowest latency).
-    CoreAudio, ///< macOS CoreAudio (compatibility layer).
+    WASAPI,    ///< Windows shared-mode audio output.
+    ASIO,      ///< Optional Steinberg ASIO backend (not implemented).
+    CoreAudio, ///< Planned macOS CoreAudio backend.
     Dummy      ///< Offline / test driver with no hardware.
 };
 
@@ -24,18 +24,11 @@ struct SampleRates {
     static constexpr double k96000 = 96000.0;
     static constexpr double k192000 = 192000.0;
 
-    static constexpr std::array<double, 4> all() {
-        return {k44100, k48000, k96000, k192000};
-    }
+    static constexpr std::array<double, 4> all() { return {k44100, k48000, k96000, k192000}; }
 };
 
 /// @brief Import/export audio file formats.
-enum class AudioFileFormat {
-    WAV,
-    MP3,
-    FLAC,
-    AIFF
-};
+enum class AudioFileFormat { WAV, MP3, FLAC, AIFF };
 
 /// @brief Returns the file extension (without dot) for a format.
 constexpr const char* fileExtension(AudioFileFormat format) {
@@ -54,13 +47,15 @@ constexpr const char* fileExtension(AudioFileFormat format) {
 
 /// @brief Complete configuration for opening an audio device.
 struct AudioDeviceConfig {
-    DriverType driver = DriverType::WASAPI;
-    double sampleRate = SampleRates::k48000;
-    int bufferSize = 256; ///< Frames per callback. 64–2048, power of two preferred.
-    int numInputChannels = 2;
+    DriverType driver =
+        DriverType::WASAPI;     ///< Shared-mode WASAPI on Windows; unavailable on other platforms.
+    std::string outputDeviceId; ///< Empty selects the current default render endpoint.
+    double sampleRate = SampleRates::k48000; ///< Preferred; backend may negotiate a different rate.
+    int bufferSize = 256; ///< Preferred callback size; shared-mode backends may choose another.
+    int numInputChannels = 0;
     int numOutputChannels = 2;
-    bool lowLatencyMode = true; ///< Exclusive-mode streams + smallest safe buffers.
-    bool enableInputs = true;
+    bool lowLatencyMode = true; ///< Prefer event-driven shared-mode buffering where available.
+    bool enableInputs = false;  ///< Capture is not part of the current 0.1 playback path.
 
     /// @brief Validates the configuration; returns empty string when valid.
     [[nodiscard]] std::string validate() const;

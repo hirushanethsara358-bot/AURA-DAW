@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace Aura::Transport {
 
@@ -24,73 +25,96 @@ double Transport::sampleRate() const {
 
 void Transport::play() {
     std::lock_guard<std::mutex> lock(mutex_);
-    state_ = TransportState::Playing;
+    state_.store(TransportState::Playing, std::memory_order_relaxed);
 }
 
 void Transport::stop() {
     std::lock_guard<std::mutex> lock(mutex_);
-    state_ = TransportState::Stopped;
+    state_.store(TransportState::Stopped, std::memory_order_relaxed);
 }
 
 void Transport::record() {
     std::lock_guard<std::mutex> lock(mutex_);
-    state_ = TransportState::Recording;
+    state_.store(TransportState::Recording, std::memory_order_relaxed);
 }
 
 TransportState Transport::state() const {
     std::lock_guard<std::mutex> lock(mutex_);
-    return state_;
+    return state_.load(std::memory_order_relaxed);
 }
 
 void Transport::advance(std::int64_t numSamples) {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (state_ == TransportState::Stopped || numSamples <= 0) {
+    if (state_.load(std::memory_order_relaxed) == TransportState::Stopped || numSamples <= 0) {
         return;
     }
-    positionSamples_ += numSamples;
+
+    const std::int64_t currentPosition = positionSamples_.load(std::memory_order_relaxed);
+    std::int64_t nextPosition =
+        numSamples > std::numeric_limits<std::int64_t>::max() - currentPosition
+            ? std::numeric_limits<std::int64_t>::max()
+            : currentPosition + numSamples;
 
     if (loopEnabled_ && loopEndBar_ > loopStartBar_) {
         const double beatsPerBar = (4.0 * timeSigNum_) / timeSigDen_;
         const double samplesPerBeat = sampleRate_ * secondsPerBeat();
-        const auto loopStart = static_cast<std::int64_t>(loopStartBar_ * beatsPerBar * samplesPerBeat);
+        const auto loopStart =
+            static_cast<std::int64_t>(loopStartBar_ * beatsPerBar * samplesPerBeat);
         const auto loopEnd = static_cast<std::int64_t>(loopEndBar_ * beatsPerBar * samplesPerBeat);
-        if (positionSamples_ >= loopEnd) {
-            positionSamples_ = loopStart + ((positionSamples_ - loopStart) % (loopEnd - loopStart));
+        if (nextPosition >= loopEnd) {
+            nextPosition = loopStart + ((nextPosition - loopStart) % (loopEnd - loopStart));
         }
     }
+    positionSamples_.store(nextPosition, std::memory_order_relaxed);
+}
+
+void Transport::publishAudioThreadPositionSamples(std::int64_t samples) noexcept {
+    positionSamples_.store(std::max<std::int64_t>(0, samples), std::memory_order_relaxed);
+}
+
+void Transport::publishAudioThreadState(TransportState state) noexcept {
+    state_.store(state, std::memory_order_relaxed);
 }
 
 void Transport::seekSamples(std::int64_t samples) {
     std::lock_guard<std::mutex> lock(mutex_);
-    positionSamples_ = std::max<std::int64_t>(0, samples);
+    positionSamples_.store(std::max<std::int64_t>(0, samples), std::memory_order_relaxed);
 }
 
 void Transport::seekBars(double bars) {
     std::lock_guard<std::mutex> lock(mutex_);
     const double beatsPerBar = (4.0 * timeSigNum_) / timeSigDen_;
-    positionSamples_ = static_cast<std::int64_t>(std::max(0.0, bars) * beatsPerBar * sampleRate_ *
-                                                 secondsPerBeat());
+    const double safeBars = std::isfinite(bars) ? std::max(0.0, bars) : 0.0;
+    const double samplePosition = safeBars * beatsPerBar * sampleRate_ * secondsPerBeat();
+    const double maxPosition = static_cast<double>(std::numeric_limits<std::int64_t>::max());
+    const std::int64_t roundedPosition =
+        !std::isfinite(samplePosition) || samplePosition >= maxPosition
+            ? std::numeric_limits<std::int64_t>::max()
+            : static_cast<std::int64_t>(samplePosition);
+    positionSamples_.store(roundedPosition, std::memory_order_relaxed);
 }
 
 std::int64_t Transport::positionSamples() const {
     std::lock_guard<std::mutex> lock(mutex_);
-    return positionSamples_;
+    return positionSamples_.load(std::memory_order_relaxed);
 }
 
 double Transport::positionSeconds() const {
     std::lock_guard<std::mutex> lock(mutex_);
-    return static_cast<double>(positionSamples_) / sampleRate_;
+    return static_cast<double>(positionSamples_.load(std::memory_order_relaxed)) / sampleRate_;
 }
 
 double Transport::positionBeats() const {
     std::lock_guard<std::mutex> lock(mutex_);
-    return static_cast<double>(positionSamples_) / (sampleRate_ * secondsPerBeat());
+    return static_cast<double>(positionSamples_.load(std::memory_order_relaxed)) /
+           (sampleRate_ * secondsPerBeat());
 }
 
 double Transport::positionBars() const {
     std::lock_guard<std::mutex> lock(mutex_);
     const double beatsPerBar = (4.0 * timeSigNum_) / timeSigDen_;
-    return static_cast<double>(positionSamples_) / (sampleRate_ * secondsPerBeat() * beatsPerBar);
+    return static_cast<double>(positionSamples_.load(std::memory_order_relaxed)) /
+           (sampleRate_ * secondsPerBeat() * beatsPerBar);
 }
 
 void Transport::setTempo(double bpm) {
@@ -115,8 +139,8 @@ void Transport::setTempoMap(std::vector<TempoMarker> markers) {
 
 void Transport::setTimeSignature(int numerator, int denominator) {
     std::lock_guard<std::mutex> lock(mutex_);
-    if (numerator > 0 && (denominator == 2 || denominator == 4 || denominator == 8 ||
-                          denominator == 16)) {
+    if (numerator > 0 &&
+        (denominator == 2 || denominator == 4 || denominator == 8 || denominator == 16)) {
         timeSigNum_ = numerator;
         timeSigDen_ = denominator;
     }

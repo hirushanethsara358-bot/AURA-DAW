@@ -11,8 +11,8 @@
 namespace Aura::Midi {
 
 std::string noteName(int midiNote) {
-    static constexpr std::array<const char*, 12> names = {"C",  "C#", "D",  "D#", "E", "F",
-                                                         "F#", "G",  "G#", "A",  "A#", "B"};
+    static constexpr std::array<const char*, 12> names = {"C",  "C#", "D",  "D#", "E",  "F",
+                                                          "F#", "G",  "G#", "A",  "A#", "B"};
     const int clamped = std::clamp(midiNote, 0, 127);
     const int octave = (clamped / 12) - 1;
     return std::string(names[static_cast<std::size_t>(clamped % 12)]) + std::to_string(octave);
@@ -115,8 +115,7 @@ void Clip::transpose(int semitones) {
 void Clip::scaleVelocity(double factor) {
     for (auto& msg : messages_) {
         if (msg.type == Message::Type::NoteOn) {
-            msg.velocity =
-                std::clamp(static_cast<int>(std::round(msg.velocity * factor)), 1, 127);
+            msg.velocity = std::clamp(static_cast<int>(std::round(msg.velocity * factor)), 1, 127);
         }
     }
 }

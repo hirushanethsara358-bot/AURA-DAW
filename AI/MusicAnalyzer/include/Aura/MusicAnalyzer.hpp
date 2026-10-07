@@ -16,8 +16,8 @@ namespace Aura::Ai {
 
 /// @brief Result of analyzing an audio selection.
 struct AnalysisResult {
-    double bpm = 0.0;          ///< 0 when no confident estimate.
-    double bpmConfidence = 0.0; ///< 0..1
+    double bpm = 0.0;            ///< 0 when no confident estimate.
+    double bpmConfidence = 0.0;  ///< 0..1
     std::string key = "Unknown"; ///< e.g. "A minor", "F# major".
     double keyConfidence = 0.0;  ///< 0..1
     double peakDb = -120.0;
@@ -27,7 +27,7 @@ struct AnalysisResult {
 
 /// @brief Offline analyzer (runs on a worker thread, not real-time).
 class MusicAnalyzer {
-public:
+  public:
     [[nodiscard]] AnalysisResult analyzeMono(const double* samples, std::size_t count,
                                              double sampleRate) const;
     [[nodiscard]] AnalysisResult analyzeStereo(const double* left, const double* right,
@@ -37,7 +37,7 @@ public:
     [[nodiscard]] std::array<double, 12> chromagram(const double* samples, std::size_t count,
                                                     double sampleRate) const;
 
-private:
+  private:
     [[nodiscard]] double detectBpm(const std::vector<double>& envelope, double envelopeRate,
                                    double& confidenceOut) const;
     [[nodiscard]] std::string detectKey(const std::array<double, 12>& chroma,

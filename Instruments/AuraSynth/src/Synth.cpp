@@ -230,9 +230,8 @@ void Synth::renderBlock(double* left, double* right, int numSamples) {
             // coefficient update is cheap relative to the oscillator).
             const double cutoffMod = 1.0 + params_.lfoDepth * 3.0 * lfo;
             const double velocityMod = 0.5 + 0.5 * v.velocityGain;
-            const double cutoff =
-                std::clamp(params_.cutoffHz * cutoffMod * (0.5 + 0.5 * velocityMod), 40.0,
-                           sampleRate_ * 0.49);
+            const double cutoff = std::clamp(
+                params_.cutoffHz * cutoffMod * (0.5 + 0.5 * velocityMod), 40.0, sampleRate_ * 0.49);
             if ((i & 31) == 0) { // amortize: refresh coeffs every 32 samples
                 v.filter.setParams(cutoff, params_.resonance, 0.0);
             }

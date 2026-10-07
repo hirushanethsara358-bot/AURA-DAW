@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <iterator>
 
 #include <gtest/gtest.h>
 
@@ -102,4 +103,108 @@ TEST(Project, TrackManagement) {
     EXPECT_TRUE(project.removeTrack(id));
     EXPECT_EQ(project.findTrack(id), nullptr);
     EXPECT_FALSE(project.removeTrack("missing"));
+}
+
+TEST(Project, AddAudioClipValidatesAndRoundTrips) {
+    Aura::Project::Project project;
+    project.createNew("Audio import");
+    const std::string trackId = project.addTrack("Audio 1", Aura::Project::TrackType::Audio);
+
+    Aura::Project::ClipState clip;
+    clip.name = "Intro.wav";
+    clip.startBar = 2.0;
+    clip.lengthBars = 3.5;
+    clip.sourcePath = "Samples/Intro.wav";
+    std::string error;
+    ASSERT_TRUE(project.addClip(trackId, clip, error)) << error;
+    EXPECT_TRUE(error.empty());
+    EXPECT_EQ(project.findTrack(trackId)->clips.front().id, "clip-1");
+
+    Aura::Project::TrackMixerState mixer;
+    mixer.volumeDb = -6.0;
+    mixer.pan = 0.25;
+    ASSERT_TRUE(project.setTrackMixerState(trackId, mixer));
+    EXPECT_FALSE(project.setTrackMixerState("missing", mixer));
+    mixer.pan = 2.0;
+    EXPECT_FALSE(project.setTrackMixerState(trackId, mixer));
+
+    const fs::path dir = uniqueTempDir("audio_clip");
+    const fs::path file = dir / "song.aura";
+    ASSERT_TRUE(project.save(file.generic_string()).empty());
+
+    Aura::Project::Project loaded;
+    ASSERT_TRUE(loaded.load(file.generic_string()).empty());
+    ASSERT_EQ(loaded.tracks().size(), 1);
+    ASSERT_EQ(loaded.tracks().front().clips.size(), 1);
+    EXPECT_EQ(loaded.tracks().front().clips.front().sourcePath, "Samples/Intro.wav");
+    EXPECT_DOUBLE_EQ(loaded.tracks().front().clips.front().lengthBars, 3.5);
+    EXPECT_DOUBLE_EQ(loaded.tracks().front().mixer.volumeDb, -6.0);
+    EXPECT_DOUBLE_EQ(loaded.tracks().front().mixer.pan, 0.25);
+    fs::remove_all(dir);
+}
+
+TEST(Project, FailedLoadPreservesCurrentSession) {
+    const fs::path dir = uniqueTempDir("transactional_load");
+    const fs::path goodFile = dir / "good.aura";
+    const fs::path badFile = dir / "bad.aura";
+
+    Aura::Project::Project project;
+    project.createNew("Keep this session");
+    const std::string trackId =
+        project.addTrack("Keep this track", Aura::Project::TrackType::Audio);
+    ASSERT_TRUE(project.save(goodFile.generic_string()).empty());
+    const std::string originalPath = project.filePath();
+
+    std::ofstream(badFile)
+        << R"({"format":"aura-project","version":1,"name":"Broken","tempo":1000,"tracks":[]})";
+    const std::string error = project.load(badFile.generic_string());
+    EXPECT_FALSE(error.empty());
+    EXPECT_EQ(project.name(), "Keep this session");
+    ASSERT_EQ(project.tracks().size(), 1);
+    EXPECT_EQ(project.tracks().front().id, trackId);
+    EXPECT_EQ(project.filePath(), originalPath);
+    EXPECT_FALSE(project.isDirty());
+    fs::remove_all(dir);
+}
+
+TEST(Project, FailedAtomicSaveLeavesExistingProjectFileUntouched) {
+    const fs::path dir = uniqueTempDir("atomic_save");
+    const fs::path goodFile = dir / "good.aura";
+
+    Aura::Project::Project project;
+    project.createNew("Atomic");
+    project.addTrack("Before", Aura::Project::TrackType::Audio);
+    ASSERT_TRUE(project.save(goodFile.generic_string()).empty());
+    const std::string originalPath = project.filePath();
+    std::ifstream originalInput(goodFile, std::ios::binary);
+    const std::string originalContents((std::istreambuf_iterator<char>(originalInput)),
+                                       std::istreambuf_iterator<char>());
+
+    project.addTrack("After", Aura::Project::TrackType::Audio);
+    const fs::path occupiedTarget = dir / "occupied.aura";
+    fs::create_directory(occupiedTarget);
+    EXPECT_FALSE(project.save(occupiedTarget.generic_string()).empty());
+    EXPECT_EQ(project.filePath(), originalPath);
+    EXPECT_TRUE(project.isDirty());
+
+    std::ifstream afterInput(goodFile, std::ios::binary);
+    const std::string afterContents((std::istreambuf_iterator<char>(afterInput)),
+                                    std::istreambuf_iterator<char>());
+    EXPECT_EQ(afterContents, originalContents);
+    fs::remove_all(dir);
+}
+
+TEST(Project, RejectsInvalidAudioClipAndEmptySavePath) {
+    Aura::Project::Project project;
+    project.createNew("Invalid input");
+    const std::string trackId = project.addTrack("Audio", Aura::Project::TrackType::Audio);
+
+    Aura::Project::ClipState clip;
+    clip.name = "Missing asset";
+    clip.lengthBars = 1.0;
+    std::string error;
+    EXPECT_FALSE(project.addClip(trackId, clip, error));
+    EXPECT_FALSE(error.empty());
+    EXPECT_TRUE(project.findTrack(trackId)->clips.empty());
+    EXPECT_FALSE(project.save("").empty());
 }

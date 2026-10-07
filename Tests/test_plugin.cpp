@@ -46,7 +46,7 @@ TEST(Plugin, FormatNames) {
 
 namespace {
 class MockPlugin : public Aura::Plugin::IAudioPlugin {
-public:
+  public:
     explicit MockPlugin(Aura::Plugin::PluginDescriptor desc) : desc_(std::move(desc)) {}
 
     const Aura::Plugin::PluginDescriptor& descriptor() const override { return desc_; }
@@ -79,7 +79,7 @@ public:
         return "";
     }
 
-private:
+  private:
     Aura::Plugin::PluginDescriptor desc_;
     bool opened_ = false;
     double param_ = 0.5;
@@ -97,9 +97,8 @@ TEST(Plugin, ManagerLifecycleAndPresets) {
     EXPECT_TRUE(manager.contains("VST3:Mock"));
     EXPECT_EQ(manager.listPlugins().size(), 1);
 
-    manager.setFactory([](const Aura::Plugin::PluginDescriptor& d) {
-        return std::make_unique<MockPlugin>(d);
-    });
+    manager.setFactory(
+        [](const Aura::Plugin::PluginDescriptor& d) { return std::make_unique<MockPlugin>(d); });
 
     auto plugin = manager.create("VST3:Mock");
     ASSERT_NE(plugin, nullptr);

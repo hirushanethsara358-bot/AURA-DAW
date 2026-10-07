@@ -24,8 +24,17 @@ namespace Aura::Audio {
 
 /// @brief Real-time audio callback interface (64-bit floating point).
 class IAudioCallback {
-public:
+  public:
     virtual ~IAudioCallback() = default;
+
+    /// @brief Called on the control/startup thread with the negotiated device format.
+    /// Reconfigure prepared DSP here before the backend begins callbacks.
+    virtual std::string configureDeviceFormat(double sampleRate, int numInputs, int numOutputs) {
+        (void)sampleRate;
+        (void)numInputs;
+        (void)numOutputs;
+        return {};
+    }
 
     /// @param inputs      Array of input channel buffers (may be nullptr).
     /// @param outputs     Array of output channel buffers to fill.
@@ -36,9 +45,9 @@ public:
                               int numOutputs, int numSamples) = 0;
 };
 
-/// @brief Minimal driver abstraction; concrete ASIO/WASAPI drivers implement this.
+/// @brief Minimal audio-driver abstraction with platform backends plus Dummy.
 class IAudioDriver {
-public:
+  public:
     virtual ~IAudioDriver() = default;
     [[nodiscard]] virtual DriverType type() const = 0;
     [[nodiscard]] virtual std::vector<AudioDeviceInfo> enumerateDevices() = 0;
@@ -46,11 +55,15 @@ public:
     virtual std::string start(const AudioDeviceConfig& config, IAudioCallback& callback) = 0;
     virtual void stop() = 0;
     [[nodiscard]] virtual bool isRunning() const = 0;
+    /// @brief Active endpoint buffer size in frames, or zero when the driver has no estimate.
+    [[nodiscard]] virtual int latencySamples() const { return 0; }
+    /// @brief Most recent asynchronous device error, or empty when no error is present.
+    [[nodiscard]] virtual std::string lastError() const { return {}; }
 };
 
 /// @brief Central audio engine. Owns the active driver and exposes meters.
 class AudioEngine {
-public:
+  public:
     AudioEngine();
     ~AudioEngine();
 
@@ -72,7 +85,15 @@ public:
     /// @brief Starts the audio stream. Returns "" on success.
     std::string start();
     void stop();
-    [[nodiscard]] bool isRunning() const { return running_.load(std::memory_order_acquire); }
+    [[nodiscard]] bool isRunning() const;
+    /// @brief Sample rate and channel count negotiated for the active/prepared callback.
+    [[nodiscard]] double negotiatedSampleRate() const noexcept {
+        return negotiatedSampleRate_.load(std::memory_order_relaxed);
+    }
+    [[nodiscard]] int negotiatedOutputChannels() const noexcept {
+        return negotiatedOutputChannels_.load(std::memory_order_relaxed);
+    }
+    [[nodiscard]] std::string lastError() const;
 
     /// @brief Renders blocks through the callback without hardware (offline/test).
     /// @return Number of blocks rendered.
@@ -87,7 +108,7 @@ public:
     /// @brief Output latency estimate in samples (driver + buffering).
     [[nodiscard]] int latencySamples() const;
 
-private:
+  private:
     class EngineCallback;
     std::unique_ptr<EngineCallback> engineCallback_;
     std::unique_ptr<IAudioDriver> driver_;
@@ -96,12 +117,14 @@ private:
     mutable std::mutex mutex_;
     AudioDeviceConfig config_;
     std::atomic<bool> running_{false};
+    std::atomic<double> negotiatedSampleRate_{48000.0};
+    std::atomic<int> negotiatedOutputChannels_{2};
     std::atomic<double> cpuLoad_{0.0};
     std::atomic<std::uint64_t> underruns_{0};
     std::chrono::steady_clock::time_point lastCallbackTime_{};
 };
 
-/// @brief Creates the best driver for the requested type (falls back to Dummy).
+/// @brief Creates the requested compiled driver, or nullptr when unavailable.
 std::unique_ptr<IAudioDriver> createDriver(DriverType type);
 
 } // namespace Aura::Audio

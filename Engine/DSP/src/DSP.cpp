@@ -62,8 +62,7 @@ void Biquad::reset() {
 }
 
 double Biquad::processSample(double x, int channel) {
-    State& s =
-        states_[static_cast<std::size_t>(channel) % states_.size()];
+    State& s = states_[static_cast<std::size_t>(channel) % states_.size()];
     const double y = b0_ * x + b1_ * s.x1 + b2_ * s.x2 - a1_ * s.y1 - a2_ * s.y2;
     s.x2 = s.x1;
     s.x1 = x;
@@ -158,11 +157,12 @@ void ParametricEQ::prepare(double sampleRate, int numChannels) {
     // HPF, LF peak, LM peak, HM peak, HF peak, LPF.
     const std::array<Biquad::Type, kNumBands> types = {
         Biquad::Type::HighPass, Biquad::Type::Peaking, Biquad::Type::Peaking,
-        Biquad::Type::Peaking, Biquad::Type::Peaking, Biquad::Type::LowPass};
+        Biquad::Type::Peaking,  Biquad::Type::Peaking, Biquad::Type::LowPass};
     const std::array<double, kNumBands> freqs = {30.0, 120.0, 800.0, 2500.0, 8000.0, 18000.0};
     for (int i = 0; i < kNumBands; ++i) {
         bands_[static_cast<std::size_t>(i)].setType(types[static_cast<std::size_t>(i)]);
-        bands_[static_cast<std::size_t>(i)].setParams(freqs[static_cast<std::size_t>(i)], 0.7071, 0.0);
+        bands_[static_cast<std::size_t>(i)].setParams(freqs[static_cast<std::size_t>(i)], 0.7071,
+                                                      0.0);
         bands_[static_cast<std::size_t>(i)].prepare(sampleRate, numChannels);
     }
 }
@@ -366,8 +366,7 @@ void Reverb::prepare(double sampleRate, int numChannels) {
     for (std::size_t ch = 0; ch < n; ++ch) {
         const double spread = 1.0 + 0.01 * static_cast<double>(ch);
         for (std::size_t c = 0; c < 4; ++c) {
-            const auto len =
-                static_cast<std::size_t>(combMs[c] * spread * 0.001 * sampleRate_) + 1;
+            const auto len = static_cast<std::size_t>(combMs[c] * spread * 0.001 * sampleRate_) + 1;
             combs_[ch][c].buffer.assign(len, 0.0);
             combs_[ch][c].pos = 0;
             combs_[ch][c].filtered = 0.0;
