@@ -1,0 +1,14 @@
+{
+  "effect": "ParametricEQ",
+  "name": "Vocal Air",
+  "parameters": {
+    "band0_type": "HighPass",
+    "band0_freqHz": 80.0,
+    "band2_freqHz": 350.0,
+    "band2_gainDb": -2.5,
+    "band2_q": 1.2,
+    "band4_freqHz": 12000.0,
+    "band4_gainDb": 4.0,
+    "band4_q": 0.8
+  }
+}

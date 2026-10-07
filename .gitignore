@@ -1,0 +1,79 @@
+# Build outputs
+build/
+out/
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+CTestTestfile.cmake
+*.ninja
+.ninja_*
+
+# Compiled objects & binaries
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dll
+*.dylib
+*.exe
+*.pdb
+*.ilk
+*.exp
+
+# Qt / QML
+*.qmlc
+*.jsc
+moc_*
+qrc_*
+ui_*
+.qmake.stash
+*.pro.user*
+
+# JUCE
+JuceLibraryCode/
+*.jucer.bak
+
+# Installers & packages
+Installer/*.exe
+*.msi
+*.dmg
+_CPack_Packages/
+*.zip
+*.7z
+
+# vcpkg
+vcpkg_installed/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.sln
+*.vcxproj*
+*.suo
+*.user
+*.ncb
+compile_commands.json
+.cache/
+
+# Tests / coverage
+Testing/
+*.gcda
+*.gcno
+*.gcov
+coverage/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Audio scratch (keep factory dirs, ignore renders)
+Projects/autosave/
+*.wav
+*.mp3
+*.flac
+*.aiff
+!Samples/**/*.wav

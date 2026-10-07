@@ -1,0 +1,39 @@
+# AURA Installer — Windows NSIS setup via CPack.
+# Produces: AURA-DAW-Setup.exe
+include(InstallRequiredSystemLibraries)
+
+install(DIRECTORY "${CMAKE_SOURCE_DIR}/Samples/"
+  DESTINATION "Factory Library"
+  FILES_MATCHING PATTERN "*.md" EXCLUDE
+)
+install(FILES "${CMAKE_SOURCE_DIR}/README.md"
+  DESTINATION "."
+  RENAME "AURA-DAW-Readme.txt"
+)
+
+set(CPACK_PACKAGE_NAME "AURA DAW")
+set(CPACK_PACKAGE_VENDOR "AURA")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "AURA Digital Audio Workstation")
+set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
+set(CPACK_PACKAGE_INSTALL_DIRECTORY "AURA DAW")
+set(CPACK_PACKAGE_FILE_NAME "AURA-DAW-Setup")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+
+set(CPACK_GENERATOR "NSIS")
+set(CPACK_NSIS_DISPLAY_NAME "AURA Digital Audio Workstation")
+set(CPACK_NSIS_PACKAGE_NAME "AURA DAW ${PROJECT_VERSION}")
+set(CPACK_NSIS_MODIFY_PATH ON)
+set(CPACK_NSIS_ENABLE_UNINSTALL_BEFORE_INSTALL ON)
+set(CPACK_NSIS_MUI_ICON "${CMAKE_CURRENT_SOURCE_DIR}/aura.ico")
+set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "
+  WriteRegStr HKCU 'Software\\\\AURA\\\\DAW' 'Version' '${PROJECT_VERSION}'
+")
+
+# Optional Authenticode signing for release builds:
+#   cmake -DAURA_SIGN_TOOL="signtool sign /fd SHA256 /a" ...
+if(DEFINED AURA_SIGN_TOOL)
+  set(CPACK_NSIS_EXTRA_INSTALL_COMMANDS "${CPACK_NSIS_EXTRA_INSTALL_COMMANDS}")
+  message(STATUS "Installer signing enabled: ${AURA_SIGN_TOOL}")
+endif()
+
+include(CPack)

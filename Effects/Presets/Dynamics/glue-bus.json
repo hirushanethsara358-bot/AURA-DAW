@@ -1,0 +1,12 @@
+{
+  "effect": "Compressor",
+  "name": "Mix Bus Glue",
+  "parameters": {
+    "thresholdDb": -18.0,
+    "ratio": 2.0,
+    "attackMs": 30.0,
+    "releaseMs": 150.0,
+    "kneeDb": 6.0,
+    "makeupGainDb": 2.0
+  }
+}

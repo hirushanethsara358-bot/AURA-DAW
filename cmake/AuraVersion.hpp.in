@@ -1,0 +1,14 @@
+#pragma once
+
+/// @file Version.hpp
+/// @brief Auto-generated version information for AURA DAW.
+
+namespace Aura {
+
+constexpr const char* kVersionString = "@PROJECT_VERSION@";
+constexpr int kVersionMajor = @PROJECT_VERSION_MAJOR@;
+constexpr int kVersionMinor = @PROJECT_VERSION_MINOR@;
+constexpr int kVersionPatch = @PROJECT_VERSION_PATCH@;
+constexpr const char* kApplicationName = "AURA Digital Audio Workstation";
+
+} // namespace Aura

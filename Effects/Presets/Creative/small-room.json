@@ -1,0 +1,9 @@
+{
+  "effect": "Reverb",
+  "name": "Small Room",
+  "parameters": {
+    "roomSize": 0.35,
+    "damping": 0.5,
+    "mix": 0.18
+  }
+}

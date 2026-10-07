@@ -1,0 +1,52 @@
+{
+  "version": 3,
+  "configurePresets": [
+    {
+      "name": "core",
+      "displayName": "Core (no Qt/JUCE)",
+      "description": "Dependency-free core libraries + tests. Works on any platform.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/core",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "AURA_ENABLE_QT6": "OFF",
+        "AURA_ENABLE_JUCE": "OFF",
+        "AURA_BUILD_TESTS": "ON",
+        "AURA_BUILD_INSTALLER": "OFF"
+      }
+    },
+    {
+      "name": "windows-full",
+      "displayName": "Windows full build",
+      "description": "Complete Windows build with Qt6 UI, JUCE backend and installer.",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/windows-full",
+      "cacheVariables": {
+        "AURA_ENABLE_QT6": "ON",
+        "AURA_ENABLE_JUCE": "ON",
+        "AURA_BUILD_TESTS": "ON",
+        "AURA_BUILD_INSTALLER": "ON",
+        "CMAKE_PREFIX_PATH": "$env{QT6_DIR}"
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "core", "configurePreset": "core", "configuration": "Release" },
+    { "name": "windows-full", "configurePreset": "windows-full", "configuration": "Release" }
+  ],
+  "testPresets": [
+    {
+      "name": "core",
+      "configurePreset": "core",
+      "configuration": "Release",
+      "output": { "outputOnFailure": true }
+    },
+    {
+      "name": "windows-full",
+      "configurePreset": "windows-full",
+      "configuration": "Release",
+      "output": { "outputOnFailure": true }
+    }
+  ]
+}
