@@ -4,7 +4,7 @@
 
 AURA DAW is an early C++20 digital-audio-workstation project. A shared-mode WASAPI backend, one-WAV playback session, and QML transport/mixer wiring now exist in this working copy, but the Windows device path and Qt application have not been run on real Windows hardware. It remains an **experimental MVP, not a complete or production-ready DAW**. Multi-clip playback, the production mixer/engine, VST3 loading, non-WAV codecs, and installer release path remain unfinished.
 
-> **Current state (2026-10-07):** Linux core tests pass locally (84 passed; one Windows-only test is skipped). The Qt 6.8.2 application builds and starts in an offscreen Linux smoke test; `qmllint` exits successfully with 59 unqualified-access warnings. The Windows core/test executable cross-compile/link with MinGW, but Windows tests, the Windows Qt build, and real WASAPI playback have not been run. Local clang-format checks pass; remote CI has not verified this unpushed working copy.
+> **Current state (2026-10-07):** Linux core tests pass locally (84 passed; one platform-specific test is skipped). The Qt 6.8.2 application builds and starts in an offscreen Linux smoke test; `qmllint` exits successfully with 59 unqualified-access warnings. GitHub Actions passed the native `windows-latest` core build/tests and clang-format check for commit `63b97cf` ([run](https://github.com/hirushanethsara358-bot/AURA-DAW/actions/runs/37573620173)); the Windows Qt build and real WASAPI hardware playback remain unverified.
 
 ## What exists today
 
@@ -51,7 +51,7 @@ cmake --build --preset core
 ctest --preset core --output-on-failure
 ```
 
-On Linux this builds the portable core libraries/tests and uses the offline `Dummy` driver. The current suite has 85 tests: 84 pass and one Windows-only factory test is skipped. The Windows backend, core libraries and test executable have also been cross-compiled/linked with MinGW; the Windows executable could not be run in this Linux environment. See the status report for verification limits.
+On Linux this builds the portable core libraries/tests and uses the offline `Dummy` driver. The 85-test suite passes locally (84 passed, one platform-specific test skipped). GitHub Actions also passed the native Windows core build and CTest suite for commit `63b97cf` (84 passed, one test skipped); the Windows factory test ran there. The MinGW cross-built executable was not run on Linux, and hosted CI does not prove audible playback on a real endpoint. See the status report for verification limits.
 
 ## Windows UI/audio/installer status
 

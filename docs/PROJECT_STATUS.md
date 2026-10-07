@@ -4,13 +4,13 @@
 
 **Repository:** `hirushanethsara358-bot/AURA-DAW`
 
-**Audit branch:** `feature/readiness-audit` (local working copy; no push performed during this audit)
+**Audit branch:** `feature/readiness-audit` (pushed to GitHub; CI run recorded below)
 
 ## Executive summary
 
 The repository is a promising, tested **core prototype**, not a commercial-grade or end-to-end digital audio workstation. The earlier `1.0.0` README language overstated what is implemented. This audit corrects the product claims and identifies the shortest safe path to a usable Windows MVP.
 
-There are tested core libraries for DSP, mixing, MIDI helpers, project serialization, a synth/sampler prototype and heuristic music analysis. The one-WAV `AURA::Session` callback path now has sample-rate and tempo rescheduling, live track gain/pan, seek/stop, and a master peak meter. It is wired to QML transport/mixer/status/retry controls. A Windows shared-mode WASAPI backend is implemented, and the Windows core plus test executable cross-compile/link with MinGW. The Qt 6.8.2 application now builds and starts in an offscreen Linux smoke test; `qmllint` exits 0 with unqualified-access warnings. Windows tests, a Windows Qt build, and real endpoint playback have not been run; no audible playback claim is made. Multi-clip scheduling, production mixer real-time safety, VST3 and installer validation remain release blockers.
+There are tested core libraries for DSP, mixing, MIDI helpers, project serialization, a synth/sampler prototype and heuristic music analysis. The one-WAV `AURA::Session` callback path now has sample-rate and tempo rescheduling, live track gain/pan, seek/stop, and a master peak meter. It is wired to QML transport/mixer/status/retry controls. A Windows shared-mode WASAPI backend is implemented, and GitHub Actions now passes the native Windows core build/tests; the MinGW cross-build also links the Windows test executable. The Qt 6.8.2 application builds and starts in an offscreen Linux smoke test; `qmllint` exits 0 with unqualified-access warnings. No Windows Qt build or real endpoint playback has been performed; no audible playback claim is made. Multi-clip scheduling, production mixer real-time safety, VST3 and installer validation remain release blockers.
 
 ## Verification performed
 
@@ -19,7 +19,8 @@ There are tested core libraries for DSP, mixing, MIDI helpers, project serializa
 - Configured `cmake --preset core` with CMake 4.4.4 and Ninja.
 - Built all core libraries and the Google Test executable successfully.
 - The latest Linux core build and `ctest --preset core --output-on-failure` completed all **85** tests on 2026-10-07: **84 passed, 1 Windows-only test skipped**, 0 failed. Coverage includes negotiated sample-rate and tempo rescheduling plus callback deadline-miss counting.
-- Cross-compiled the Windows `AURA::Engine`, `AURA::Session`, all core libraries and the test executable with MinGW; the WASAPI smoke executable linked. Windows tests were not executed because this environment cannot run PE programs.
+- Cross-compiled the Windows `AURA::Engine`, `AURA::Session`, all core libraries and the test executable with MinGW; the WASAPI smoke executable linked. The PE files were not run on Linux.
+- Pushed `feature/readiness-audit`; GitHub Actions run [37573620173](https://github.com/hirushanethsara358-bot/AURA-DAW/actions/runs/37573620173) passed clang-format and native Ubuntu/Windows core build + tests. Each platform reported 84 passed and one platform-specific test skipped. The first Windows run exposed an open-file cleanup issue in `Project.FailedAtomicSaveLeavesExistingProjectFileUntouched`; the test now explicitly closes both streams, and the follow-up run passed.
 - Configured/built the Qt 6.8.2 application in `build/ui`; QML cache generation succeeded. An offscreen Linux startup smoke test ran for eight seconds with no QML runtime errors. `qmllint` exits 0 and reports 59 unqualified-access warnings. Windows Qt build/device playback have not been run.
 - clang-format 18 dry-run passed across all C++ sources. The core preset does not build the Qt UI or NSIS installer.
 
@@ -33,7 +34,7 @@ The public repository's latest CI runs for commit `a050f6ba99e8abe9b37950ce6f05d
 
 Run links: [main CI](https://github.com/hirushanethsara358-bot/AURA-DAW/actions/runs/37560699462) · [development CI](https://github.com/hirushanethsara358-bot/AURA-DAW/actions/runs/37560698604).
 
-This branch reformats the C++ files and includes `Plugins/` and the new `Session/` module in the format check. GitHub has not verified these local changes; a fresh CI run requires the branch to be pushed.
+This branch reformats the C++ files and includes `Plugins/` and the new `Session/` module in the format check. The pushed `feature/readiness-audit` branch is now verified by GitHub Actions: [run 37573620173](https://github.com/hirushanethsara358-bot/AURA-DAW/actions/runs/37573620173) passed Ubuntu, Windows and clang-format jobs.
 
 ## Important findings
 
@@ -62,7 +63,7 @@ This branch reformats the C++ files and includes `Plugins/` and the new `Session
 - Added timeline-frame placement, seek, resume and end-of-range behavior to the standalone one-clip `WavClipPlayer`, with linear resampling and atomic gain/pan controls. Its render path uses no heap allocation, blocking lock, or file I/O; offline tests cover scheduling and transport.
 - `ProjectPlaybackSession` now accepts one audio clip, reschedules 4/4 timeline frames after negotiated sample-rate or tempo changes while preserving musical position, supports bar seek/stop, applies live track gain/pan/master gain and publishes callback-safe playhead/peak data. Multi-clip scheduling is still rejected.
 - MainWindow/QML now starts the audio engine, prepares the session, wires Play/Stop/rewind/seek and tempo changes, reflects clip-end/device errors, allows audio retry, and connects track fader/pan plus CPU/peak meters. WAV decoding still happens synchronously at first Play.
-- Qt 6.8.2 Linux UI build and offscreen startup smoke test pass. Added the missing `QtQuick.Layouts` import and corrected Browser delegate sizing; `qmllint` exits 0 with 59 remaining unqualified-access warnings. The UI exposes negotiated rate/channel status, approximate latency, and the callback deadline-miss counter for manual QA. Qt Windows build, Windows tests, device negotiation/audible playback, installer and real VST3 execution remain open.
+- Qt 6.8.2 Linux UI build and offscreen startup smoke test pass. Added the missing `QtQuick.Layouts` import and corrected Browser delegate sizing; `qmllint` exits 0 with 59 remaining unqualified-access warnings. The UI exposes negotiated rate/channel status, approximate latency, and the callback deadline-miss counter for manual QA. GitHub Windows core build/tests now pass; Windows Qt build, hardware device negotiation/audible playback, installer and real VST3 execution remain open.
 
 ## Recommended development order (confirmed scope)
 

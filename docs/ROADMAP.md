@@ -10,13 +10,13 @@ The project has not failed. It has a useful, tested foundation; it is not yet a 
 
 ### Verified foundation
 
-- Linux `core` configure/build and unit tests pass locally: **84 passed, 1 Windows-only test skipped** out of 85 on 2026-10-07. The Windows core, WASAPI backend and test executable cross-compile/link with MinGW, but Windows tests were not run.
+- Linux `core` configure/build and unit tests pass locally: **84 passed, 1 platform-specific test skipped** out of 85 on 2026-10-07. GitHub Actions native Ubuntu and Windows core build/tests plus clang-format passed for commit `63b97cf` ([run](https://github.com/hirushanethsara358-bot/AURA-DAW/actions/runs/37573620173)); actual Windows audio hardware remains untested.
 - DSP/mixer logic, MIDI helpers, project serialization, synth/sampler prototypes and heuristic analysis are present. WAV decode is bounded and memory-capped.
 - `ProjectPlaybackSession` and the QML controller now connect a single project WAV clip to Play/Stop/rewind/seek, negotiated rate/tempo rescheduling, live track gain/pan and CPU/peak meters. Multi-clip playback, background decode/streaming and the generalized real-time mixer remain incomplete.
 - The Windows shared-mode WASAPI backend uses the default render endpoint's mix format and reports startup/runtime errors. It compiles and links, but sample-rate/channel behavior, audible playback, disconnect, underrun and restart have not been validated on Windows hardware.
 - Qt 6.8.2 UI build and offscreen Linux startup smoke test pass; `qmllint` exits 0 with 59 unqualified-access warnings. The UI displays negotiated output rate/channels, estimated latency and a callback deadline-miss counter for acceptance testing. Windows Qt integration, real-device playback, installer and VST3 execution remain unverified.
 - Plugin scanning/management scaffolding exists, but there is no actual VST3 loading or processing.
-- The local formatting check passes, including `Plugins/` and the new `Session/` module. The published GitHub baseline had passing Ubuntu/Windows core jobs but failed formatting; the local fixes still need a push and fresh remote CI run.
+- The GitHub Actions format check now passes, including `Plugins/` and the new `Session/` module. The original published baseline's formatting failure was corrected and verified in the pushed branch.
 
 ## Phase 1 — AURA DAW 0.1: real DAW MVP
 
