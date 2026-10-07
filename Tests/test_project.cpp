@@ -179,6 +179,7 @@ TEST(Project, FailedAtomicSaveLeavesExistingProjectFileUntouched) {
     std::ifstream originalInput(goodFile, std::ios::binary);
     const std::string originalContents((std::istreambuf_iterator<char>(originalInput)),
                                        std::istreambuf_iterator<char>());
+    originalInput.close();
 
     project.addTrack("After", Aura::Project::TrackType::Audio);
     const fs::path occupiedTarget = dir / "occupied.aura";
@@ -190,6 +191,7 @@ TEST(Project, FailedAtomicSaveLeavesExistingProjectFileUntouched) {
     std::ifstream afterInput(goodFile, std::ios::binary);
     const std::string afterContents((std::istreambuf_iterator<char>(afterInput)),
                                     std::istreambuf_iterator<char>());
+    afterInput.close();
     EXPECT_EQ(afterContents, originalContents);
     fs::remove_all(dir);
 }
